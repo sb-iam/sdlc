@@ -1,10 +1,16 @@
 # HL01_LL01: Change log
 
+## v2 — Phase 1: Planning (iter 2) — Codex feedback
+- Fixed AC-07 gap: added nonexistent code lookup step to `test_error_paths_do_not_corrupt_state` integration test scenario
+- Fixed exception contract inconsistency: changed `_generate_code()` exhaustion from `RuntimeError` to `ValueError` so `shorten()` contract stays internally consistent across plan and code blueprint
+- Fixed changelog accuracy: clarified that test spec traces ACs (not REQs directly); REQs are traced in plan and code blueprint
+- Addressed all 3 Codex review comments (2x P1, 1x P2)
+
 ## v1 — Phase 1: Planning (iter 1)
 - Created `plan_HL01_LL01.md`: single-module architecture (URLShortener + URLEntry dataclass), in-memory dict store, secrets-based code generation
 - Created `test_HL01_LL01.md`: 18 unit tests across 8 groups + 4 integration tests, all 9 ACs covered
 - Created `code_HL01_LL01.md`: full implementation blueprint with algorithms, error handling, type contracts
-- Traceability verified: 9/9 AC and 7/7 REQ traced in all three documents
+- Traceability verified: 9/9 AC traced in all three documents; 7/7 REQ traced in plan and code blueprint (test spec traces ACs which map to REQs via spec)
 - Round 1 adaptation: Codex-only review (no Gemini), manual orchestration
 
 ## v0 — Initial spec

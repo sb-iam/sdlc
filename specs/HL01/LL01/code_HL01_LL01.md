@@ -129,10 +129,10 @@ Algorithm:
 1. for _ in range(MAX_RETRIES):
    a. code = ''.join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
    b. if code not in _store → return code
-2. raise RuntimeError("code generation exhausted")
+2. raise ValueError("code generation exhausted — no unique code found")
 
 Return type: str
-Raises: RuntimeError (should never happen in practice with 62^6 space)
+Raises: ValueError (propagates through shorten(); should never happen in practice with 62^6 space)
 ```
 
 ---
@@ -158,7 +158,7 @@ __all__ = ["URLShortener"]
 | Non-existent code (resolve) | `KeyError` | AC-07 |
 | Non-existent code (stats) | `KeyError` | AC-07 |
 | Alias collision | `ValueError` | AC-09 |
-| Code generation exhaustion | `RuntimeError` | — (safety net) |
+| Code generation exhaustion | `ValueError` | — (safety net, propagates through shorten()) |
 
 ---
 

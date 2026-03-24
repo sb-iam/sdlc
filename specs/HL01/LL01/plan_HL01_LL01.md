@@ -131,7 +131,7 @@ class URLShortener:
 
 1. Use `secrets.choice()` over `string.ascii_letters + string.digits` (62 chars).
 2. Generate 6 characters.
-3. If code already in `_store`, regenerate (collision probability ~1/56 billion).
+3. If code already in `_store`, regenerate (collision probability ~1/56 billion). Raises `ValueError` after max retries (safety net — should never occur in practice).
 
 ---
 
