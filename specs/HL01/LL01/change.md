@@ -1,5 +1,15 @@
 # HL01_LL01: Change log
 
+## v6 — Phase 3: Code creation (iter 1)
+- Replaced NotImplementedError stubs with full implementation in `modules/HL01/LL01/src/shortener.py`
+- `shorten()`: validates URL, generates 6-char code or uses custom alias, stores URLEntry
+- `resolve()`: looks up code, increments clicks, returns original URL
+- `stats()`: returns dict with url, clicks, created_at
+- `_validate_url()`: rejects empty strings and URLs without scheme/netloc
+- `_generate_code()`: loops with secrets.choice until unique, only fails at true code space exhaustion
+- All 22 tests pass (18 unit + 4 integration), 0 test files modified
+- Stdlib only: secrets, string, urllib.parse, dataclasses, datetime
+
 ## v5 — Phase 2: Test suite + data creation (iter 1)
 - Created `modules/HL01/LL01/tests/unit/test_shortener.py`: 18 unit tests across 8 test classes
 - Created `modules/HL01/LL01/tests/integration/test_shortener_integration.py`: 4 integration tests
