@@ -1,5 +1,46 @@
 # HL01_LL01: Change log
 
+## v6 — Phase 3: Code creation (iter 1)
+- Replaced NotImplementedError stubs with full implementation in `modules/HL01/LL01/src/shortener.py`
+- `shorten()`: validates URL, generates 6-char code or uses custom alias, stores URLEntry
+- `resolve()`: looks up code, increments clicks, returns original URL
+- `stats()`: returns dict with url, clicks, created_at
+- `_validate_url()`: rejects empty strings and URLs without scheme/netloc
+- `_generate_code()`: loops with secrets.choice until unique, only fails at true code space exhaustion
+- All 22 tests pass (18 unit + 4 integration), 0 test files modified
+- Stdlib only: secrets, string, urllib.parse, dataclasses, datetime
+
+## v5 — Phase 2: Test suite + data creation (iter 1)
+- Created `modules/HL01/LL01/tests/unit/test_shortener.py`: 18 unit tests across 8 test classes
+- Created `modules/HL01/LL01/tests/integration/test_shortener_integration.py`: 4 integration tests
+- Created `modules/HL01/LL01/tests/fixtures/urls.json`: 6 valid, 5 invalid, 100 bulk URLs
+- Created `modules/HL01/LL01/tests/conftest.py`: shortener + url_data fixtures
+- Created `modules/HL01/LL01/src/shortener.py`: stub (NotImplementedError) with URLEntry dataclass
+- Created `modules/HL01/LL01/src/__init__.py`: exports URLShortener
+- Every test annotated with `# Covers: AC-xx` — 9/9 AC covered in both unit and integration tests
+
+## v4 — Phase 1: Planning (iter 4) — Codex feedback
+- Made error-path integration test scenario explicit: two distinct invalid inputs (empty string for AC-05, "not-a-url" for AC-06) instead of one generic "attempt invalid shorten"
+- Addressed 1 Codex P2 comment from iter 3 re-review
+
+## v3 — Phase 1: Planning (iter 3) — Codex feedback
+- Fixed _generate_code() algorithm: removed arbitrary MAX_RETRIES cap, now loops until unique code found; only raises ValueError when entire code space (~56.8B) is truly exhausted
+- Ensures REQ-01 (must generate unique code for any valid URL) is guaranteed, not probabilistic
+- Addressed 1 Codex P1 comment from iter 2 re-review
+
+## v2 — Phase 1: Planning (iter 2) — Codex feedback
+- Fixed AC-07 gap: added nonexistent code lookup step to `test_error_paths_do_not_corrupt_state` integration test scenario
+- Fixed exception contract inconsistency: changed `_generate_code()` exhaustion from `RuntimeError` to `ValueError` so `shorten()` contract stays internally consistent across plan and code blueprint
+- Fixed changelog accuracy: clarified that test spec traces ACs (not REQs directly); REQs are traced in plan and code blueprint
+- Addressed all 3 Codex review comments (2x P1, 1x P2)
+
+## v1 — Phase 1: Planning (iter 1)
+- Created `plan_HL01_LL01.md`: single-module architecture (URLShortener + URLEntry dataclass), in-memory dict store, secrets-based code generation
+- Created `test_HL01_LL01.md`: 18 unit tests across 8 groups + 4 integration tests, all 9 ACs covered
+- Created `code_HL01_LL01.md`: full implementation blueprint with algorithms, error handling, type contracts
+- Traceability verified: 9/9 AC traced in all three documents; 7/7 REQ traced in plan and code blueprint (test spec traces ACs which map to REQs via spec)
+- Round 1 adaptation: Codex-only review (no Gemini), manual orchestration
+
 ## v0 — Initial spec
 - Created from product vision HL01
 - 7 requirements (REQ-01 through REQ-07)
