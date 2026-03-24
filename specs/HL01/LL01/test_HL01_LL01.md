@@ -94,7 +94,7 @@ File: `modules/HL01/LL01/tests/integration/test_shortener_integration.py`
 
 | Test | Scenario | AC |
 |------|----------|-----|
-| `test_error_paths_do_not_corrupt_state` | Shorten valid URL → attempt invalid shorten (verify ValueError) → resolve original (still works) → attempt resolve of nonexistent code (verify KeyError, AC-07) → attempt alias collision (verify ValueError) → resolve original (still works) | AC-05, AC-06, AC-07, AC-09 |
+| `test_error_paths_do_not_corrupt_state` | Shorten valid URL → shorten empty string (verify ValueError, AC-05) → shorten "not-a-url" (verify ValueError, AC-06) → resolve original (still works) → resolve nonexistent code (verify KeyError, AC-07) → shorten with colliding alias (verify ValueError, AC-09) → resolve original (still works) | AC-05, AC-06, AC-07, AC-09 |
 
 ### 3.4 Bulk operations — Covers: AC-01, AC-02
 

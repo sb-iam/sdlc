@@ -1,5 +1,9 @@
 # HL01_LL01: Change log
 
+## v4 — Phase 1: Planning (iter 4) — Codex feedback
+- Made error-path integration test scenario explicit: two distinct invalid inputs (empty string for AC-05, "not-a-url" for AC-06) instead of one generic "attempt invalid shorten"
+- Addressed 1 Codex P2 comment from iter 3 re-review
+
 ## v3 — Phase 1: Planning (iter 3) — Codex feedback
 - Fixed _generate_code() algorithm: removed arbitrary MAX_RETRIES cap, now loops until unique code found; only raises ValueError when entire code space (~56.8B) is truly exhausted
 - Ensures REQ-01 (must generate unique code for any valid URL) is guaranteed, not probabilistic
