@@ -1,5 +1,14 @@
 # HL01_LL01: Change log
 
+## v5 — Phase 2: Test suite + data creation (iter 1)
+- Created `modules/HL01/LL01/tests/unit/test_shortener.py`: 18 unit tests across 8 test classes
+- Created `modules/HL01/LL01/tests/integration/test_shortener_integration.py`: 4 integration tests
+- Created `modules/HL01/LL01/tests/fixtures/urls.json`: 6 valid, 5 invalid, 100 bulk URLs
+- Created `modules/HL01/LL01/tests/conftest.py`: shortener + url_data fixtures
+- Created `modules/HL01/LL01/src/shortener.py`: stub (NotImplementedError) with URLEntry dataclass
+- Created `modules/HL01/LL01/src/__init__.py`: exports URLShortener
+- Every test annotated with `# Covers: AC-xx` — 9/9 AC covered in both unit and integration tests
+
 ## v4 — Phase 1: Planning (iter 4) — Codex feedback
 - Made error-path integration test scenario explicit: two distinct invalid inputs (empty string for AC-05, "not-a-url" for AC-06) instead of one generic "attempt invalid shorten"
 - Addressed 1 Codex P2 comment from iter 3 re-review
