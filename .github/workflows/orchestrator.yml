@@ -1,0 +1,161 @@
+# ============================================================================
+# Multi-LLM SDLC — Dumb YAML Orchestrator
+# ============================================================================
+# NOT an AI. Just if/else and gh cli.
+# Reads state files, triggers Claude, counts reviewer approvals.
+# Zero intelligence. By design.
+# ============================================================================
+
+name: "SDLC Pipeline"
+
+on:
+  push:
+    paths: ["specs/**/spec.md"]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      spec_id:
+        description: "Spec ID (e.g., HL01_LL01)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: sdlc-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  # ── Detect spec ────────────────────────────────────────────────────────────
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.parse.outputs.id }}
+      hl: ${{ steps.parse.outputs.hl }}
+      ll: ${{ steps.parse.outputs.ll }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - name: Parse spec
+        id: parse
+        run: |
+          if [ -n "${{ inputs.spec_id }}" ]; then
+            ID="${{ inputs.spec_id }}"
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'specs/**/spec.md' | head -1)
+            HL=$(echo "$CHANGED" | grep -oP 'HL\d+')
+            LL=$(echo "$CHANGED" | grep -oP 'LL\d+')
+            ID="${HL}_${LL}"
+          fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+          echo "hl=$(echo $ID | cut -d_ -f1)" >> "$GITHUB_OUTPUT"
+          echo "ll=$(echo $ID | cut -d_ -f2)" >> "$GITHUB_OUTPUT"
+
+  # ── Phase 1: Planning ─────────────────────────────────────────────────────
+  phase-plan:
+    needs: detect
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Setup branch + PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ID="${{ needs.detect.outputs.id }}"
+          BRANCH="sdlc/$ID"
+          git config user.name "sdlc-bot"
+          git config user.email "sdlc-bot@users.noreply.github.com"
+          git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+
+          # Create PR if not exists (triggers Codex + Gemini auto-review)
+          git push origin "$BRANCH" --force-with-lease 2>/dev/null || true
+          EXISTING=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -z "$EXISTING" ] || [ "$EXISTING" = "null" ]; then
+            gh pr create --head "$BRANCH" --base main \
+              --title "[$ID] $(head -1 specs/${{ needs.detect.outputs.hl }}/${{ needs.detect.outputs.ll }}/spec.md | sed 's/^# //')" \
+              --body "Multi-LLM SDLC pipeline. Three phases. Two independent reviewers."
+          fi
+
+      - name: Claude creates plan
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Phase 1: Create planning documents for ${{ needs.detect.outputs.id }}.
+            Read CLAUDE.md for your full instructions.
+            Read specs/${{ needs.detect.outputs.hl }}/${{ needs.detect.outputs.ll }}/spec.md.
+            Create: plan_${{ needs.detect.outputs.id }}.md, test_${{ needs.detect.outputs.id }}.md, code_${{ needs.detect.outputs.id }}.md
+            in specs/${{ needs.detect.outputs.hl }}/${{ needs.detect.outputs.ll }}/.
+            Update change.md. Commit as [${{ needs.detect.outputs.id }}] plan iter 1.
+          claude_args: "--max-turns 15"
+
+      - name: Push (triggers auto-reviews)
+        run: |
+          git push origin "sdlc/${{ needs.detect.outputs.id }}" --force-with-lease
+
+  # ── Phase 2: Test creation ─────────────────────────────────────────────────
+  phase-tests:
+    needs: [detect, phase-plan]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sdlc/${{ needs.detect.outputs.id }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Claude creates tests
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Phase 2: Create test suite for ${{ needs.detect.outputs.id }}.
+            Read CLAUDE.md, the approved test_${{ needs.detect.outputs.id }}.md.
+            Create unit tests, integration tests, fixtures in modules/${{ needs.detect.outputs.hl }}/${{ needs.detect.outputs.ll }}/tests/.
+            Create stubs in modules/${{ needs.detect.outputs.hl }}/${{ needs.detect.outputs.ll }}/src/.
+            Every test must have # Covers: AC-xx.
+            Commit as [${{ needs.detect.outputs.id }}] tests iter 1.
+          claude_args: "--max-turns 15"
+
+      - name: Push
+        run: git push origin "sdlc/${{ needs.detect.outputs.id }}" --force-with-lease
+
+  # ── Phase 3: Code creation ─────────────────────────────────────────────────
+  phase-code:
+    needs: [detect, phase-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sdlc/${{ needs.detect.outputs.id }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Claude creates code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Phase 3: Implement code for ${{ needs.detect.outputs.id }}.
+            Read CLAUDE.md, the approved code_${{ needs.detect.outputs.id }}.md.
+            Implement in modules/${{ needs.detect.outputs.hl }}/${{ needs.detect.outputs.ll }}/src/.
+            ALL tests must pass. Do NOT modify test files.
+            Run: python -m pytest and ruff check.
+            Commit as [${{ needs.detect.outputs.id }}] code iter 1.
+          claude_args: "--max-turns 20"
+
+      - name: Push + notify
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push origin "sdlc/${{ needs.detect.outputs.id }}" --force-with-lease
+          PR=$(gh pr list --head "sdlc/${{ needs.detect.outputs.id }}" --json number --jq '.[0].number')
+          [ -n "$PR" ] && gh pr comment "$PR" --body "Pipeline complete for ${{ needs.detect.outputs.id }}. All three phases executed. Ready for human review."
+
