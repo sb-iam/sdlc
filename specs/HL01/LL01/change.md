@@ -1,5 +1,10 @@
 # HL01_LL01: Change log
 
+## v3 — Phase 1: Planning (iter 3) — Codex feedback
+- Fixed _generate_code() algorithm: removed arbitrary MAX_RETRIES cap, now loops until unique code found; only raises ValueError when entire code space (~56.8B) is truly exhausted
+- Ensures REQ-01 (must generate unique code for any valid URL) is guaranteed, not probabilistic
+- Addressed 1 Codex P1 comment from iter 2 re-review
+
 ## v2 — Phase 1: Planning (iter 2) — Codex feedback
 - Fixed AC-07 gap: added nonexistent code lookup step to `test_error_paths_do_not_corrupt_state` integration test scenario
 - Fixed exception contract inconsistency: changed `_generate_code()` exhaustion from `RuntimeError` to `ValueError` so `shorten()` contract stays internally consistent across plan and code blueprint

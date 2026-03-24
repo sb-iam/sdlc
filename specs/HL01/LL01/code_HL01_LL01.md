@@ -38,7 +38,7 @@ from urllib.parse import urlparse
 ```python
 CODE_LENGTH: int = 6
 CODE_ALPHABET: str = string.ascii_letters + string.digits  # 62 chars
-MAX_RETRIES: int = 10  # collision retry limit (theoretical safety net)
+CODE_SPACE: int = len(CODE_ALPHABET) ** CODE_LENGTH          # ~56.8 billion
 ```
 
 ### 3.3 `URLEntry` dataclass
@@ -126,13 +126,13 @@ Raises: ValueError
 
 ```
 Algorithm:
-1. for _ in range(MAX_RETRIES):
+1. if len(_store) >= CODE_SPACE → raise ValueError("code space exhausted")
+2. while True:
    a. code = ''.join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
    b. if code not in _store → return code
-2. raise ValueError("code generation exhausted — no unique code found")
 
 Return type: str
-Raises: ValueError (propagates through shorten(); should never happen in practice with 62^6 space)
+Raises: ValueError (only when code space is truly full — impossible in practice with ~56.8 billion codes)
 ```
 
 ---
@@ -158,7 +158,7 @@ __all__ = ["URLShortener"]
 | Non-existent code (resolve) | `KeyError` | AC-07 |
 | Non-existent code (stats) | `KeyError` | AC-07 |
 | Alias collision | `ValueError` | AC-09 |
-| Code generation exhaustion | `ValueError` | — (safety net, propagates through shorten()) |
+| Code space fully exhausted | `ValueError` | — (only when all ~56.8B codes used) |
 
 ---
 
